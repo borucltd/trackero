@@ -1,47 +1,91 @@
-// import mysql module
-const mysql = require("mysql");
+const inquirer = require('inquirer');
+const mysql = require('mysql');
 
-// database cuntructor
-function initateDatabase (databaseUrl,databasePort,databaseUser,databasePassword,databaseName)  {
-    
-    // attributes
-    this.databaseUrl= databaseUrl;
-    this.databasePort = databasePort;
-    this.databaseUser = databaseUser;
-    this.databasePassword = databasePassword;
-    this.databaseName = databaseName;
+// database constructor
 
-    // method to connect to DB
-    this.connectDB = function () {
+class database {
 
-        // define connection 
-        const connection = mysql.createConnection({
-            host: this.databaseUrl,
-            port: this.databasePort,
-            user: this.databaseUser,
-            password: this.databasePassword,
-            database: this.databaseName
-        });
+  constructor() {
 
-        connection.connect(function(err) {
-            if (err) {
-                console.error("Error connecting to " + databaseName);
-               //console.error("Error connecting to " + databaseName + " : " + err.stack);
-                return;
+    this.questions = [
+      {
+        name: 'databaseUrl',
+        type: 'input',
+        default: 'employeedb.cp4ki52legr7.ap-southeast-2.rds.amazonaws.com',
+        message: 'Enter your DB url:',
+        validate: function( value ) {
+          if (value.length) {
+            return true;
+          } else {
+            return 'Enter your DB url:';
+          }
+        }
+      },
+      {
+          name: 'databasePort',
+          type: 'number',
+          default: '3306',
+          message: 'Enter your DB port:',
+          validate: function( value ) {
+            if (value.length) {
+              return true;
+            } else {
+              return 'Enter your DB port:';
             }
-            console.log("Connected to " + databaseName + " as id " + connection.threadId);
-            });
-        } 
-
-    // method to query DB
-    this.queryDB = function (sql,parameters) {
-
-        connection.query(sql, parameters, function(err, result) {
-            if (err) {
-              return res.status(500).end();
+          }
+        },
+      {
+        name: 'databaseUser',
+        type: 'input',
+        default: 'tracker_admin',
+        message: 'Enter your DB username:',
+        validate: function( value ) {
+          if (value.length) {
+            return true;
+          } else {
+            return 'Enter your DB username:';
+          }
+        }
+      },
+      {
+        name: 'databasePassword',
+        type: 'password',
+        message: 'Please enter your password:',
+        validate: function(value) {
+          if (value.length) {
+            return true;
+          } else {
+            return 'Please enter your password:';
+          }
+        }
+      },
+      {
+          name: 'databaseName',
+          type: 'input',
+          default: 'tracker_DB',
+          message: 'Please enter your DB name:',
+          validate: function(value) {
+            if (value.length) {
+              return true;
+            } else {
+              return 'Please enter your DB name:';
             }
-        });
-    }
-}
+          }
+        }
+    ];
 
-module.exports = initateDatabase;
+  }
+
+  setupConnection(answers) {
+      return mysql.createConnection({
+        host: answers.databaseUrl,
+        port: answers.databasePort,
+        user: answers.databaseUser,
+        password: answers.databasePassword,
+        database: answers.databaseName    
+      })
+  }
+     
+  }
+
+module.exports = database;
