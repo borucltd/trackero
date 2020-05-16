@@ -74,6 +74,23 @@ class database {
         }
     ];
 
+    this.toDoQuestions = [
+      {
+        name: 'todo',
+        type: 'list',
+        message: 'What would you like to do?:',
+        choices: ['View All Employees', 
+        'View All Employess by Department', 
+        'View All Employess by Manager',
+        'Add Employee',
+        'Remove Employee',
+        'Update Employee Role',
+        'Update Employee Manager',
+        'Add Role',
+        'Remove Role']
+      }
+    ];
+
   }
 
   setupConnection(answers) {

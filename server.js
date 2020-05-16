@@ -10,10 +10,9 @@ const mysql = require('mysql');
 const terminal = require("./local_modules/terminal");
 const database = require("./local_modules/database");
 
-
-
-
-// functions taken from GS
+// ===========================================================================
+// FUNCTIONS taken from GS
+// ===========================================================================
 // Wrap connection.connect() in a promise!
 async function connect(connection) {
     return new Promise((resolve, reject) => {
@@ -35,9 +34,6 @@ async function query(command, values) {
 }
 
 
-
-
-
 // main function
 async function main() {
 
@@ -51,10 +47,9 @@ async function main() {
     await connect(connection);
     console.log(`Connected to ${answers.databaseName}! Session ID: `, connection.threadId);
 
-
+    // loop here
+    const todo = await inquirer.prompt(db.toDoQuestions);
     console.log("let's move on");
-    
-   
 
 }
 
