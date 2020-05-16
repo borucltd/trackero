@@ -1,2 +1,2 @@
 # trackero
-Employee tracker using node.js + express + mysql.
+Employee tracker using node.js + inquirer + mysql.
