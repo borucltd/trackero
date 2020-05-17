@@ -50,6 +50,7 @@ class database {
       {
         name: 'databasePassword',
         type: 'password',
+        default: 'r,#RHh%.g~.6kB@h',
         message: 'Please enter your password:',
         validate: function(value) {
           if (value.length) {
@@ -79,17 +80,63 @@ class database {
         name: 'todo',
         type: 'list',
         message: 'What would you like to do?:',
-        choices: ['View All Employees', 
-        'View All Employess by Department', 
-        'View All Employess by Manager',
-        'Add Employee',
-        'Remove Employee',
-        'Update Employee Role',
-        'Update Employee Manager',
-        'Add Role',
-        'Remove Role']
+        choices: [
+        'Manage department',
+        'Manage role',
+        'Manage employee',
+        'Generic operations',
+        'Exit']
       }
     ];
+
+    this.manageDepartment = [
+      {
+        name: 'manageD',
+        type: 'list',
+        message: 'What would you like to do?:',
+        choices: [
+        'Add department',
+        'Remove department',
+        'View department']
+      }
+    ];
+
+    this.manageRole = [
+      {
+        name: 'manageR',
+        type: 'list',
+        message: 'What would you like to do?:',
+        choices: [
+        'Add role',
+        'Remove role',
+        'View roles']
+      }
+    ];
+
+    this.manageEmployee = [
+      {
+        name: 'manageE',
+        type: 'list',
+        message: 'What would you like to do?:',
+        choices: [
+        'Add employee',
+        'Remove employee',
+        'View employees']
+      }
+    ];
+
+    this.genericOperations = [
+      {
+        name: 'manageE',
+        type: 'list',
+        message: 'What would you like to do?:',
+        choices: [
+        'Add employee',
+        'Remove employee',
+        'View employees']
+      }
+    ];
+    
 
   }
 
