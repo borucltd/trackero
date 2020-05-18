@@ -65,8 +65,9 @@ async function main() {
                 console.log(todoLevel1);
                 switch (todoLevel1.manageD) {
                     case 'Add department':
-                        const addDepartment = sql.sqlAdd("department");
-                        console.log(addDepartment);
+                        const nameDepartment = await inquirer.prompt(db.addDepartment);
+                        const addDepartment = sql.sqlAdd("department",nameDepartment);
+                        console.table(await query(addDepartment,[mysql.raw("department"),mysql.raw("name"),nameDepartment.nameD],connection));
                         break;
         
                     case 'Remove department':

@@ -1,8 +1,9 @@
 const inquirer = require('inquirer');
 
 
-function sqlAdd(input) {
-  return("adddddd" + input);
+function sqlAdd(where,what) {
+
+  return("INSERT INTO ? (?) VALUES (?);");
 
 }
 

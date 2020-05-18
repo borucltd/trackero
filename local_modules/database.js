@@ -127,6 +127,23 @@ class database {
       }
     ];
 
+    this.addDepartment = [
+      {
+        name: 'nameD',
+        type: 'input',
+        default: 'new_department',
+        message: 'Please enter name of the department:',
+        validate: function(value) {
+            if (value.length) {
+              return true;
+            } else {
+              return 'Please enter name of the department:';
+            }
+          }
+        }
+      
+    ];
+
     
 
   }
