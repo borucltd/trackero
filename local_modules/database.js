@@ -84,7 +84,6 @@ class database {
         'Manage department',
         'Manage role',
         'Manage employee',
-        'Generic operations',
         'Exit']
       }
     ];
@@ -97,7 +96,8 @@ class database {
         choices: [
         'Add department',
         'Remove department',
-        'View department']
+        'View department',
+        'Back']
       }
     ];
 
@@ -109,7 +109,8 @@ class database {
         choices: [
         'Add role',
         'Remove role',
-        'View roles']
+        'View roles',
+        'Back']
       }
     ];
 
@@ -121,21 +122,11 @@ class database {
         choices: [
         'Add employee',
         'Remove employee',
-        'View employees']
+        'View employees',
+        'Back']
       }
     ];
 
-    this.genericOperations = [
-      {
-        name: 'manageE',
-        type: 'list',
-        message: 'What would you like to do?:',
-        choices: [
-        'Add employee',
-        'Remove employee',
-        'View employees']
-      }
-    ];
     
 
   }

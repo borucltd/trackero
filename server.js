@@ -10,10 +10,12 @@ const cTable = require('console.table');
 // ===========================================================================
 const terminal = require("./local_modules/terminal");
 const database = require("./local_modules/database");
+const sql = require("./local_modules/sql");
 
 // ===========================================================================
 // FUNCTIONS taken from GS
 // ===========================================================================
+
 // Wrap connection.connect() in a promise!
 async function connect(connection) {
     return new Promise((resolve, reject) => {
@@ -35,7 +37,6 @@ async function query(command, values,conn) {
     })
 }
 
-
 // main function
 async function main() {
 
@@ -51,27 +52,83 @@ async function main() {
     console.log(`Connected to ${answers.databaseName}! Session ID: `, connection.threadId);
 
     // loop here
-    let submenu;
+    let submenu,submenuLevel1,todoLevel1;
     while (true)
     {
         // decide what to do
         const {todo} = await inquirer.prompt(db.toDoQuestions);
       
+       console.log(todo);
         switch (todo) {
-            case 'Manage department':
-                 submenu = db.manageDepartment;
-                break;
+            case 'Manage department':         
+                todoLevel1 = await inquirer.prompt(db.manageDepartment);
+                console.log(todoLevel1);
+                switch (todoLevel1.manageD) {
+                    case 'Add department':
+                        const addDepartment = sql.sqlAdd("department");
+                        console.log(addDepartment);
+                        break;
+        
+                    case 'Remove department':
+                        const deleteDepartment = sql.sqlDelete("department");
+                        console.log(deleteDepartment);
+                        break;
+                        
+                    case 'View department':
+                        const viewDepartment = sql.sqlView("department");
+                        console.table(await query(viewDepartment,"department",connection));
+                        break;
+                        
+                    default:
+                        break;
+                  }
+                break;     
 
             case 'Manage role':
-                 submenu = db.manageRole;
+                todoLevel1 = await inquirer.prompt(db.manageRole);
+                console.log(todoLevel1);
+                switch (todoLevel1.manageR) {
+                    case 'Add role':
+                        const addRole = sql.sqlAdd("role");
+                        console.log(addRole);
+                        break;
+         
+                    case 'Remove role':
+                        const deleteRole = sql.sqlDelete("role");
+                        console.log(deleteRole);
+                        break;
+                         
+                    case 'View roles':
+                        const viewRole = sql.sqlView("role");
+                        console.table(await query(viewRole,"role",connection));
+                        break;
+                         
+                    default:
+                        break;
+                   }
                 break;
                 
             case 'Manage employee':
-                 submenu = db.manageEmployee;
-                break;
-                
-            case 'Generic operations':
-                 submenu = db.genericOperations;
+                todoLevel1 = await inquirer.prompt(db.manageEmployee);
+                switch (todoLevel1.manageE) {
+                    case 'Add employee':
+                        const addEmployee = sql.sqlAdd("employee");
+                        console.log(addEmployee);
+                        break;
+         
+                    case 'Remove employee':
+                        const deleteEmployee = sql.sqlDelete("employee");
+                        console.log(deleteEmployee);
+                        break;
+                         
+                    case 'View employees':
+                        const viewEmployee = sql.sqlView("employee");
+                        console.table(await query(viewEmployee,"employee",connection));
+                        break;
+                         
+                    default:
+                        break;
+                   }
                 break;
                 
             default:
@@ -82,16 +139,7 @@ async function main() {
         // exit from loop
         if (todo === 'Exit') {
             break;
-        } else {
-            
-            const next1 = await inquirer.prompt(submenu);
-            console.log(next1);
-            const result = await query('SELECT * FROM  ? ', [mysql.raw("department")],connection);
-            console.table(result);
-        }
-
-
-        
+        }         
     }
 
     // once we finished with the databse quit the connection
