@@ -121,7 +121,7 @@ class database {
         message: 'What would you like to do?:',
         choices: [
         'Add employee',
-        'Remove employee',
+        'Update employee',
         'View employees',
         'Back']
       }
