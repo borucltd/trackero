@@ -1,11 +1,22 @@
 const inquirer = require('inquirer');
 
 
-function sqlAdd(where,what) {
+function sqlAdd(what) {
 
-  return("INSERT INTO ? (?) VALUES (?);");
+  switch (what) {
+    case 'department':
+      return("INSERT INTO ? (?) VALUES (?);");
+      break;
+    case 'role':
+      return("INSERT INTO ? (?,?,?) VALUES (?,?,?);");
+      break;
+    case 'employee':
+      return("INSERT INTO ? (?,?,?,?) VALUES (?,?,?,?);");
+      break;
+  }
 
 }
+
 
 function sqlDelete(input) {
 
@@ -13,10 +24,16 @@ function sqlDelete(input) {
 }
 
 function sqlView(input) {
-   return("SELECT * FROM " + input);
+  switch (input) {
+    case 'manager':
+      return("SELECT DISTINCT " + input +"_id FROM employee");
+      break;
+    default: 
+      return("SELECT * FROM " + input);
+      break;
+  }
 }
-
-                  
+                
 
 module.exports = {
   sqlAdd: sqlAdd,

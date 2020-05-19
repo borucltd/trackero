@@ -144,6 +144,64 @@ class database {
       
     ];
 
+    this.addRole = [
+      {
+        name: 'nameR',
+        type: 'input',
+        default: 'new_role',
+        message: 'Please enter name of the role:',
+        validate: function(value) {
+            if (value.length) {
+              return true;
+            } else {
+              return 'Please enter name of the role:';
+            }
+          }
+        },
+        {
+          name: 'salaryR',
+          type: 'input',
+          default: '0.0',
+          message: 'Please enter salary for the role:',
+          validate: function(value) {
+              if (value.length) {
+                return true;
+              } else {
+                return 'Please enter salary for the role:';
+              }
+            }
+          }     
+    ];
+
+    this.addEmployee = [
+      {
+        name: 'nameE',
+        type: 'input',
+        default: 'new_name',
+        message: 'Please enter first name of the employee:',
+        validate: function(value) {
+            if (value.length) {
+              return true;
+            } else {
+              return 'Please enter first name of the employee:';
+            }
+          }
+        },
+        {
+          name: 'lastNameE',
+          type: 'input',
+          default: 'new_last_name',
+          message: 'Please enter last name of the employee:',
+          validate: function(value) {
+              if (value.length) {
+                return true;
+              } else {
+                return 'Please enter last name of the employee:';
+              }
+            }
+          }     
+    ];
+
     
 
   }
