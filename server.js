@@ -72,8 +72,24 @@ async function main() {
                         break;
         
                     case 'Remove department':
-                        const deleteDepartment = sql.sqlDelete("department");
-                        console.log(deleteDepartment);
+                        // collect departments ids
+                        const departmentNames = sql.sqlView("genericdepartment");
+                        const departments = await query(departmentNames,"department",connection);
+                        const names = departments.map(item => item.name);
+                        const deleteDepartment = await inquirer.prompt({
+                            name: 'depName',
+                            type: 'list',
+                            message: 'Select department to be removed:',
+                            choices: names,
+                        });
+                        const deleteDepartmentID = departments.filter( (item) => { 
+                            if (item.name === deleteDepartment.depName) {
+                                return item
+                            }
+                        });
+                        const delDepartment = sql.sqlDelete();
+                        const tab = mysql.raw("department");
+                        await query(delDepartment,[tab, deleteDepartmentID[0].id],connection);                  
                         break;
                         
                     case 'View department':

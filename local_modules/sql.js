@@ -24,9 +24,9 @@ function sqlUpdateEmployee() {
 
 
 
-function sqlDelete(input) {
+function sqlDelete() {
 
-  return("delete" + input);
+  return("DELETE FROM ? WHERE id=?;");
 }
 
 function sqlView(input) {
