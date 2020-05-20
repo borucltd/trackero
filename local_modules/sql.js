@@ -1,6 +1,5 @@
 const inquirer = require('inquirer');
 
-
 function sqlAdd(what) {
 
   switch (what) {
