@@ -2,17 +2,20 @@ const inquirer = require('inquirer');
 
 function sqlAdd(what) {
 
+  
   switch (what) {
     case 'department':
-      return("INSERT INTO ? (?) VALUES (?);");
+      return "INSERT INTO ? (?) VALUES (?);";
       break;
     case 'role':
-      return("INSERT INTO ? (?,?,?) VALUES (?,?,?);");
+      return "INSERT INTO ? (?,?,?) VALUES (?,?,?);";
       break;
     case 'employee':
-      return("INSERT INTO ? (?,?,?,?) VALUES (?,?,?,?);");
+      return "INSERT INTO ? (?,?,?,?) VALUES (?,?,?,?);";
       break;
   }
+
+  return sql_query;
 }
 
 function sqlView(input) {
