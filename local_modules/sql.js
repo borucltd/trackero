@@ -13,20 +13,6 @@ function sqlAdd(what) {
       return("INSERT INTO ? (?,?,?,?) VALUES (?,?,?,?);");
       break;
   }
-
-}
-
-
-function sqlUpdateEmployee() {
-
-  return("UPDATE ? SET ? = ?, ? = ?, ? = ?, ? =? WHERE id = ? ;");
-}
-
-
-
-function sqlDelete() {
-
-  return("DELETE FROM ? WHERE id=?;");
 }
 
 function sqlView(input) {
@@ -35,11 +21,15 @@ function sqlView(input) {
     case 'manager':
       return("SELECT DISTINCT " + input +"_id FROM employee");
       break;
-    case 'employee': //this is sick
+    case 'employee': 
       return("SELECT ?,?,?,?,? FROM ? LEFT JOIN ? ON ? = ? LEFT JOIN ? ON ? = ? ;");
       break;
-    case 'role': //this is sick too
+    case 'role': 
       return("SELECT ?,?,? FROM ? LEFT JOIN ? ON ? = ? ;");
+      break;
+    case 'deleterole':
+      //select role.id, role.title, department.name from role left join department on role.department_id = department.id;
+      return("SELECT ?, ?, ? FROM ? LEFT JOIN ? ON ? = ?"); 
       break;
     case 'genericrole':
       return("SELECT * FROM role");
@@ -55,6 +45,16 @@ function sqlView(input) {
         break;
   }
 }
+
+function sqlUpdateEmployee() {
+  return("UPDATE ? SET ? = ?, ? = ?, ? = ?, ? =? WHERE id = ? ;");
+}
+
+function sqlDelete() {
+  return("DELETE FROM ? WHERE id=?;");
+}
+
+
                 
 
 module.exports = {

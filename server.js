@@ -132,8 +132,40 @@ async function main() {
                         break;
          
                     case 'Remove role':
-                        const deleteRole = sql.sqlDelete("role");
-                        console.log(deleteRole);
+                         // collect role ids and respective departments' names
+                        const roleNames = sql.sqlView("deleterole");
+                        const rarguments = [mysql.raw("role.id"),
+                        mysql.raw("role.title"),
+                        mysql.raw("department.name"),
+                        mysql.raw("role"),
+                        mysql.raw("department"),
+                        mysql.raw("role.department_id"),                     
+                        mysql.raw("department.id")];
+                        const roles = await query(roleNames,rarguments,connection);
+                        const rolesList = [];
+                        for (item of roles) {
+                            rolesList.push(item.id + " " +  item.title + " " +  item.name);
+                        }
+                        const deleteRole = await inquirer.prompt({
+                            name: 'roleName',
+                            type: 'list',
+                            message: 'Select role to be removed:',
+                            choices: rolesList
+                        });
+                        // separate role ID
+                        const deleteRoleID = deleteRole.roleName.split(/\s/g)[0];
+                        const deleteSql = sql.sqlDelete(); 
+                        try {
+                            await query(deleteSql,[mysql.raw("role"),deleteRoleID],connection);
+                            console.log(`${deleteRole.roleName} was deleted.`);
+
+                        } catch (error) {
+                            console.log(`${error}`);
+                        }
+                        
+
+                       
+
                         break;
                          
                     case 'View roles':
