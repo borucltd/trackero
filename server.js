@@ -239,6 +239,33 @@ async function main() {
                         // add new employee
                         const result = await query(addEmployee,[table, column1, column2, column3, column4, newEmployee.nameE, newEmployee.lastNameE, newEmployee.role.roleId, newEmployee.manager.managerId],connection);
                        break;
+
+                       case 'Remove employee':
+                        // collect role ids and respective departments' names
+                        const sqlQuery = sql.sqlView("genericemployee");
+                        const listOfEmployeesRaw = await query(sqlQuery,"",connection);
+                        const listOfEmployees = [];
+                        for (item of listOfEmployeesRaw) {
+                            listOfEmployees.push(item.id + " " +  item.first_name + " " +  item.last_name);
+                        }
+                        const deleteEmployee = await inquirer.prompt({
+                            name: 'employeeName',
+                            type: 'list',
+                            message: 'Select employee to be removed:',
+                            choices: listOfEmployees
+                        });
+                        // separate role ID
+                        const deleteEmployeeID = deleteEmployee.employeeName.split(/\s/g)[0];
+                        const deleteSql = sql.sqlDelete(); 
+                        try {
+                            await query(deleteSql,[mysql.raw("employee"),deleteEmployeeID],connection);
+                            console.log(`${deleteEmployee.employeeName} was deleted.`);
+
+                        } catch (error) {
+                            console.log(`${error}`);
+                        }                    
+
+                        break;
          
                     case 'Update employee':
                         // collect available ROLE ids
