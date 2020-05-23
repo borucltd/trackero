@@ -42,8 +42,10 @@ function sqlView(what) {
   return sqlQuery;
 }
 
-function sqlUpdateEmployee() {
-  return("UPDATE ? SET ? = ?, ? = ?, ? = ?, ? =? WHERE id = ? ;");
+function sqlUpdateEmployee(what) {
+  
+    return("UPDATE ? SET ? = ?, ? = ?, ? = ?, ? = ? WHERE id = ? ;");
+  
 }
 
 function sqlDelete() {
