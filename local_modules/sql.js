@@ -1,64 +1,59 @@
 const inquirer = require('inquirer');
 
-function sqlAdd(what) {
+function sqlInsert(what) {
+
+  let sqlQuery;
 
   switch (what) {
     case 'department':
-      return("INSERT INTO ? (?) VALUES (?);");
+      sqlQuery = "INSERT INTO ? (?) VALUES (?);";
       break;
     case 'role':
-      return("INSERT INTO ? (?,?,?) VALUES (?,?,?);");
+      sqlQuery = "INSERT INTO ? (?,?,?) VALUES (?,?,?);";
       break;
     case 'employee':
-      return("INSERT INTO ? (?,?,?,?) VALUES (?,?,?,?);");
+      sqlQuery = "INSERT INTO ? (?,?,?,?) VALUES (?,?,?,?);";
       break;
   }
+
+  return sqlQuery;
 }
 
-function sqlView(input) {
+function sqlView(what) {
 
-  switch (input) {
-    case 'manager':
-      return("SELECT DISTINCT " + input +"_id FROM employee");
+  let sqlQuery;
+
+  switch (what) {
+    case 'generic':
+      return("SELECT * FROM ? ;");
+      break; 
+    case 'unique_ids':
+      return("SELECT DISTINCT ? FROM ? ;");
       break;
-    case 'employee': 
+    case 'single_join': 
+      return("SELECT ?,?,? FROM ? LEFT JOIN ? ON ? = ? ;");
+      break; 
+    case 'double_join': 
       return("SELECT ?,?,?,?,? FROM ? LEFT JOIN ? ON ? = ? LEFT JOIN ? ON ? = ? ;");
       break;
-    case 'role': 
-      return("SELECT ?,?,? FROM ? LEFT JOIN ? ON ? = ? ;");
-      break;
-    case 'deleterole':
-      //select role.id, role.title, department.name from role left join department on role.department_id = department.id;
-      return("SELECT ?, ?, ? FROM ? LEFT JOIN ? ON ? = ?"); 
-      break;
-    case 'genericrole':
-      return("SELECT * FROM role");
-      break;
-    case 'genericmanager':
-      return("SELECT DISTINCT manager_id FROM employee");
-      break;
-    case 'genericdepartment':
-        return("SELECT * FROM department");
-        break;
-    case 'genericemployee':
-        return("SELECT * FROM employee");
-        break;
+       
   }
+
+  return sqlQuery;
 }
 
-function sqlUpdateEmployee() {
-  return("UPDATE ? SET ? = ?, ? = ?, ? = ?, ? =? WHERE id = ? ;");
+function sqlUpdateEmployee(what) {
+  
+    return("UPDATE ? SET ? = ?, ? = ?, ? = ?, ? = ? WHERE id = ? ;");
+  
 }
 
 function sqlDelete() {
-  return("DELETE FROM ? WHERE id=?;");
+  return("DELETE FROM ? WHERE id=? ;");
 }
-
-
-                
-
+               
 module.exports = {
-  sqlAdd: sqlAdd,
+  sqlInsert: sqlInsert,
   sqlDelete: sqlDelete,
   sqlView: sqlView,
   sqlUpdateEmployee: sqlUpdateEmployee

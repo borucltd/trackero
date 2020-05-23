@@ -12,213 +12,268 @@ const terminal = require("./local_modules/terminal");
 const database = require("./local_modules/database");
 const sql = require("./local_modules/sql");
 
-// ===========================================================================
-// FUNCTIONS taken from GS
-// ===========================================================================
-
-// Wrap connection.connect() in a promise!
-async function connect(connection) {
-    return new Promise((resolve, reject) => {
-        connection.connect(err => {
-            if (err) reject(err); // oh no!
-            else resolve(); // oh yeah!            
-        })
-    })
-}
-
-// Wrap connection.query() in a promise!
-async function query(command, values,conn) {
-    return new Promise((resolve, reject) => {
-        //console.log(command + "=" + values );
-        conn.query(command, values, (error, results) => {
-            if (error) reject(error); // nay!
-            else resolve(results); // yay!
-        })
-    })
-}
-
 // main function
 async function main() {
 
     // clean terminal
     terminal.terminalClear();
 
-    // collect database parameters
+    // create database objects
     const db = new database();
+
+    // setup connection parameters
     const answers = await inquirer.prompt(db.questions);
     const connection = db.setupConnection(answers);
     
-    await connect(connection);
-    console.log(`Connected to ${answers.databaseName}! Session ID: `, connection.threadId);
+    // connect to database
+    try {
+        await db.connect(connection);
+        console.log(`Connected to ${answers.databaseName}! Session ID: `, connection.threadId);
 
-    // loop here
-    let submenu,submenuLevel1,todoLevel1;
+    } catch (error) {
+        console.log(`Can't connect to ${answers.databaseName} !! : ${error}`);
+    }
+
+    // variables
+    let submenu;
+    
+    const tableD = mysql.raw("department");
+    const tableR = mysql.raw("role");
+    const tableE = mysql.raw("employee");
+
+    // generate sql queries
+    const sqlAddDepartment = sql.sqlInsert("department");
+    const sqlAddRole = sql.sqlInsert("role");
+    const sqlInsertEmployee = sql.sqlInsert("employee");
+    const sqlView = sql.sqlView("generic");                        
+    const roleNames = sql.sqlView("single_join");
+    const sqlViewManagers = sql.sqlView("unique_ids");
+    const sqlViewEmployee = sql.sqlView("double_join"); 
+    const sqlDelete = sql.sqlDelete(); 
+    const sqlUpdateEmployee = sql.sqlUpdateEmployee();   
+            
+   
+
     while (true)
     {
-        // decide what to do
-        const {todo} = await inquirer.prompt(db.toDoQuestions);
-      
-        switch (todo) {
+        
+        const menu = await inquirer.prompt(db.toDoQuestions);
+        
+        switch (menu.todo) {
             case 'Manage department':         
-                todoLevel1 = await inquirer.prompt(db.manageDepartment);
                 
-                switch (todoLevel1.manageD) {
+                submenu = await inquirer.prompt(db.manageDepartment);
+                const column = mysql.raw("name");  
+
+                switch (submenu.manageD) {
+
                     case 'Add department':
-                        const nameDepartment = await inquirer.prompt(db.addDepartment);
-                        const addDepartment = sql.sqlAdd("department");
-                        const table = mysql.raw("department");
-                        const column = mysql.raw("name");
-                        const result = await query(addDepartment,[table,column,nameDepartment.nameD],connection);
+        
+                        const newDepartment = await inquirer.prompt(db.addDepartment);               
+                        try {
+                            await db.query(sqlAddDepartment,[tableD,column,newDepartment.nameD],connection);
+                            console.log(`${newDepartment.nameD} was added.`);
+                        } catch (error) {
+                            console.log(`Error: ${error}`);
+                        }
                         break;
         
                     case 'Remove department':
+
                         // collect departments ids
-                        const departmentNames = sql.sqlView("genericdepartment");
-                        const departments = await query(departmentNames,"department",connection);
-                        const names = departments.map(item => item.name);
+                        const departments = await db.query(sqlView,tableD,connection);
+                        const departmentsNames = departments.map(item => item.name);
                         const deleteDepartment = await inquirer.prompt({
                             name: 'depName',
                             type: 'list',
                             message: 'Select department to be removed:',
-                            choices: names,
+                            choices: departmentsNames
                         });
+                        // this is id of the department to be removed
                         const deleteDepartmentID = departments.filter( (item) => { 
                             if (item.name === deleteDepartment.depName) {
                                 return item
                             }
                         });
-                        const delDepartment = sql.sqlDelete();
-                        const tab = mysql.raw("department");
-                        await query(delDepartment,[tab, deleteDepartmentID[0].id],connection);                  
+                        
+                        try {
+                            await db.query(sqlDelete,[tableD, deleteDepartmentID[0].id],connection);
+                            console.log(`${deleteDepartmentID[0].name} was removed.`);
+                        } catch (error) {
+                            console.log(`Error: ${error}`);
+                        }            
                         break;
                         
                     case 'View department':
-                        const viewDepartment = sql.sqlView("genericdepartment");
-                        console.table(await query(viewDepartment,"department",connection));
+                        
+                        console.table(await db.query(sqlView,tableD,connection));
                         break;
                         
                     default:
                         break;
                   }
-                break;     
+                break;
 
             case 'Manage role':
-                todoLevel1 = await inquirer.prompt(db.manageRole);
+
+                submenu = await inquirer.prompt(db.manageRole);
                 
-                switch (todoLevel1.manageR) {
-                    case 'Add role':
-                        // collect departments ids
-                        const departmentNames = sql.sqlView("genericdepartment");
-                        const departments = await query(departmentNames,"department",connection);
-                        const ids = [];
-                        for (item of departments) {
-                            ids.push(item.id);
-                        }
-                        const newRole = await inquirer.prompt(db.addRole);
-                        newRole.department = await inquirer.prompt({
-                            name: 'depId',
-                            type: 'list',
-                            message: 'Select department id for the role:',
-                            choices: ids,
-                        });
-                        const addRole = sql.sqlAdd("role");
-                        const table = mysql.raw("role");
-                        const column1 = mysql.raw("title");
-                        const column2 = mysql.raw("salary");
-                        const column3 = mysql.raw("department_id");
-                        //("INSERT INTO ? (?,?,?) VALUES (?,?,?);");
-                        const result = await query(addRole,[table, column1,column2, column3, newRole.nameR, newRole.salaryR, newRole.department.depId],connection);
-                                                
-                        break;
-         
-                    case 'Remove role':
-                         // collect role ids and respective departments' names
-                        const roleNames = sql.sqlView("deleterole");
-                        const rarguments = [mysql.raw("role.id"),
-                        mysql.raw("role.title"),
-                        mysql.raw("department.name"),
-                        mysql.raw("role"),
-                        mysql.raw("department"),
-                        mysql.raw("role.department_id"),                     
-                        mysql.raw("department.id")];
-                        const roles = await query(roleNames,rarguments,connection);
-                        const rolesList = [];
-                        for (item of roles) {
-                            rolesList.push(item.id + " " +  item.title + " " +  item.name);
-                        }
-                        const deleteRole = await inquirer.prompt({
-                            name: 'roleName',
-                            type: 'list',
-                            message: 'Select role to be removed:',
-                            choices: rolesList
-                        });
-                        // separate role ID
-                        const deleteRoleID = deleteRole.roleName.split(/\s/g)[0];
-                        const deleteSql = sql.sqlDelete(); 
-                        try {
-                            await query(deleteSql,[mysql.raw("role"),deleteRoleID],connection);
-                            console.log(`${deleteRole.roleName} was deleted.`);
-
-                        } catch (error) {
-                            console.log(`${error}`);
-                        }
-                        
-
-                       
-
-                        break;
-                         
-                    case 'View roles':
-                        
-
-                        const viewRole = sql.sqlView("role");
-                        //SELECT ?,?,? FROM ? LEFT JOIN ? ON ? = ? 
-                        const arguments = ["role.title",
+                const column1 = mysql.raw("title");
+                const column2 = mysql.raw("salary");
+                const column3 = mysql.raw("department_id");
+                
+                const rawViewArguments = ["role.title",
                         "role.salary",
                         "department.name",
                         "role",
                         "department",
                         "role.department_id",
                         "department.id"];
-                        const rawArguments = arguments.map(mysql.raw);                     
-                        console.table(await query(viewRole,rawArguments,connection));
+                const viewArguments = rawViewArguments.map(mysql.raw);  
+                
+                const rawRemoveArguments = ["role.id",
+                        "role.title",
+                        "department.name",
+                        "role",
+                        "department",
+                        "role.department_id",                     
+                        "department.id"];
+                const removeArguments = rawRemoveArguments.map(mysql.raw);  
+                
+                switch (submenu.manageR) {
+
+                    case 'Add role':
+
+                        // collect departments names
+                        
+                        const departments = await db.query(sqlView,tableD,connection);
+                        const departmentsNames = [];
+                        for (item of departments) {
+                            departmentsNames.push(String(item.name));
+                        }
+
+                        const newRole = await inquirer.prompt(db.addRole);
+
+                        department = await inquirer.prompt({
+                            name: 'depName',
+                            type: 'list',
+                            message: 'Select department name for the role:',
+                            choices: departmentsNames
+                        });
+
+                        // this is id of the department to be removed
+                        let useDepartmentID = departments.filter( (item) => { 
+                         
+                            if (item.name === department.depName) {
+                                return item.id;
+                            }
+                        });
+
+                        try {
+                            await db.query(sqlAddRole,[tableR, column1, column2, column3, newRole.nameR, newRole.salaryR, useDepartmentID[0].id],connection);
+                            console.log(`${newRole.nameR} was added.`);
+                        } catch (error) {
+                            console.log(`${error}`);
+                        }                    
+                        break;
+         
+                    case 'Remove role':
+
+                        // collect role ids and respective departments' names
+                        
+                        
+                        const roles = await db.query(roleNames,removeArguments,connection);
+                        const rolesList = [];
+                        for (item of roles) {
+                            rolesList.push(item.id + " " +  item.title + " " +  item.name);
+                        }
+
+                        const deleteRole = await inquirer.prompt({
+                            name: 'roleName',
+                            type: 'list',
+                            message: 'Select role to be removed:',
+                            choices: rolesList
+                        });
+
+                        // separate role ID
+                        const deleteRoleID = deleteRole.roleName.split(/\s/g)[0];
+                        
+                        try {
+                            await db.query(sqlDelete,[mysql.raw("role"),deleteRoleID],connection);
+                            console.log(`${deleteRole.roleName} was deleted.`);
+
+                        } catch (error) {
+                            console.log(`${error}`);
+                        }
+                        break;
+                         
+                    case 'View roles':
+                                  
+                        console.table(await db.query(sqlView,tableR,connection));
                         break;
                          
                     default:
                         break;
                    }
                 break;
-                
+
             case 'Manage employee':
-                todoLevel1 = await inquirer.prompt(db.manageEmployee);
-                switch (todoLevel1.manageE) {
+                
+                submenu = await inquirer.prompt(db.manageEmployee);
+ 
+                // sql arguments
+                const RawArgumentsViewEmployee = [
+                    "employee.first_name",
+                    "employee.last_name",
+                    "role.title",
+                    "role.salary",
+                    "department.name",
+                    "employee",
+                    "role",
+                    "employee.role_id",
+                    "role.id",
+                    "department",
+                    "role.department_id",
+                    "department.id"
+                ];
+                const argumentsViewEmployee = RawArgumentsViewEmployee.map(mysql.raw);
+
+                let managers = [];
+                let roles = [];
+                let Rids = [];
+                let Mids = [];
+                const columnE1 = mysql.raw("first_name");
+                const columnE2 = mysql.raw("last_name");
+                const columnE3 = mysql.raw("role_id");
+                const columnE4 = mysql.raw("manager_id");               
+
+                switch (submenu.manageE) {
+
                     case 'Add employee':
+                         
                         
                         // collect available ROLE ids
-                        const roleNames = sql.sqlView("genericrole");
-                        const roles = await query(roleNames,"role",connection);
-                        // keep ROLE ids in Rids array
-                        const Rids = [];
+                        roles = await db.query(sqlView,tableR,connection);
+                        Rids = [];
                         for (item of roles) {
-                            Rids.push(item.id);
+                            Rids.push(String(item.id));
                         }
 
                         // collect available MANAGER ids (use select with distinct)
-                        const managerNames = sql.sqlView("genericmanager");
-                        const managers = await query(managerNames,"employee",connection);
-                        // keep MANAGER ids in Mids array
-                        const Mids = [];
+                        managers = await db.query(sqlViewManagers,[columnE4,tableE],connection);
+                        Mids = [];
                         for (item of managers) {
                             // we need string because of null
                             Mids.push(String(item.manager_id));
-                        }                                               
-                        // collect first_name and last_name
+                        }   
+                        
+                        // collect first_name, last_name, role id and manager_id
                         const newEmployee = await inquirer.prompt(db.addEmployee);
-                        // collect role id and manager id
+
                         newEmployee.role = await inquirer.prompt({
                             name: 'roleId',
                             type: 'list',
-                            message: 'Select role id for the employee:',
+                            message: 'Select role for the employee:',
                             choices: Rids
                             });
                             
@@ -228,37 +283,39 @@ async function main() {
                             message: 'Select role id for the employee:',
                             choices: Mids
                             });                  
-                        
-                        // obtain SQL query for adding new employee
-                        const addEmployee = sql.sqlAdd("employee");
-                        const table = mysql.raw("employee");
-                        const column1 = mysql.raw("first_name");
-                        const column2 = mysql.raw("last_name");
-                        const column3 = mysql.raw("role_id");
-                        const column4 = mysql.raw("manager_id");
-                        // add new employee
-                        const result = await query(addEmployee,[table, column1, column2, column3, column4, newEmployee.nameE, newEmployee.lastNameE, newEmployee.role.roleId, newEmployee.manager.managerId],connection);
-                       break;
 
-                       case 'Remove employee':
-                        // collect role ids and respective departments' names
-                        const sqlQuery = sql.sqlView("genericemployee");
-                        const listOfEmployeesRaw = await query(sqlQuery,"",connection);
+                        // add new employee
+                        try {
+                            await db.query(sqlInsertEmployee,[tableE, columnE1, columnE2, columnE3, columnE4, newEmployee.nameE, newEmployee.lastNameE, newEmployee.role.roleId, newEmployee.manager.managerId],connection);
+                            console.log(`${newEmployee.nameE} ${newEmployee.lastNameE} was added.`);
+
+                        } catch (error) {
+                            console.log(`${error}`);
+                        }
+                                              
+                        break;
+
+                    case 'Remove employee':
+
+                        // collect employees who we would like to delete
+                        const listOfEmployeesRaw = await db.query(sqlView,tableE,connection);
                         const listOfEmployees = [];
                         for (item of listOfEmployeesRaw) {
                             listOfEmployees.push(item.id + " " +  item.first_name + " " +  item.last_name);
                         }
+
                         const deleteEmployee = await inquirer.prompt({
                             name: 'employeeName',
                             type: 'list',
                             message: 'Select employee to be removed:',
                             choices: listOfEmployees
                         });
+
                         // separate role ID
                         const deleteEmployeeID = deleteEmployee.employeeName.split(/\s/g)[0];
-                        const deleteSql = sql.sqlDelete(); 
+                        const sqlDelete = sql.sqlDelete(); 
                         try {
-                            await query(deleteSql,[mysql.raw("employee"),deleteEmployeeID],connection);
+                            await db.query(sqlDelete,[tableE,deleteEmployeeID],connection);
                             console.log(`${deleteEmployee.employeeName} was deleted.`);
 
                         } catch (error) {
@@ -268,43 +325,40 @@ async function main() {
                         break;
          
                     case 'Update employee':
+
                         // collect available ROLE ids
-                        const UroleNames = sql.sqlView("genericrole");
-                        const Uroles = await query(UroleNames,"role",connection);
-                        // keep ROLE ids in Rids array
-                        const URids = [];
-                        for (item of Uroles) {
-                            URids.push(item.id);
+                        roles = await db.query(sqlView,tableR,connection);
+                        Rids = [];
+                        for (item of roles) {
+                            Rids.push(String(item.id));
                         }
 
-                         // collect available MANAGER ids (use select with distinct)
-                         const UmanagerNames = sql.sqlView("genericmanager");
-                         const Umanagers = await query(UmanagerNames,"employee",connection);
-                         // keep MANAGER ids in Mids array
-                         const UMids = [];
-                         for (item of Umanagers) {
-                             // we need string because of null
-                             UMids.push(String(item.manager_id));
-                         }    
+                        // collect available MANAGER ids (use select with distinct)
+                        managers = await db.query(sqlViewManagers,[columnE4,tableE],connection);
+                        Mids = [];
+                        for (item of managers) {
+                            // we need string because of null
+                            Mids.push(String(item.manager_id));
+                        }   
                         
-                        // pick up which employee needs to be updated 
-                        const viewEmployees = sql.sqlView("genericemployee");
-                        const rowdatapackets = await query(viewEmployees,"employee",connection);
-                        const employees = [];
-                        let record = "";
-                        rowdatapackets.forEach(element => {
+                        // generate list of employees to choose from 
+                        const employees = await db.query(sqlView,tableE,connection);
+                        const employeesRecords = [];
+                        let employeeRecord = "";
+                        employees.forEach(element => {
                             record=`${element.id} ${element.first_name} ${element.last_name} ${element.role_id} ${element.manager_id}`;
-                            employees.push(record);
-                            
+                            employeesRecords.push(String(record));
                         });
 
+                        // select an employee from the list
                         const updateEmployee = await inquirer.prompt({
                             name: 'updateEmployee',
                             type: 'list',
                             message: 'Select employee you want to update:',
-                            choices: employees
+                            choices: employeesRecords
                             });
 
+                        // new object updated employee first name, last name
                         const updatedEmployee = await inquirer.prompt([
                             {
                                 name: 'first_name',
@@ -334,80 +388,75 @@ async function main() {
                             }
                         ]);
 
-                        // collect role id and manager id
+                        // new object updated employee role id and manager id
                         updatedEmployee.role = await inquirer.prompt({
                             name: 'roleId',
                             type: 'list',
                             message: 'Select new role id for the employee:',
-                            choices: URids
+                            choices: Rids
                             });
                             
                         updatedEmployee.manager = await inquirer.prompt({
                             name: 'managerId',
                             type: 'list',
                             message: 'Select new manager id for the employee:',
-                            choices: UMids
-                            });   
+                            choices: Mids
+                            });                      
+                        
+                        // some arguments need to be escaped
+                        const arguments = [
+                            mysql.raw("employee"),
+                            mysql.raw("first_name"),
+                            updatedEmployee.first_name, // new first name
+                            mysql.raw("last_name"),
+                            updatedEmployee.last_name,  // new last name
+                            mysql.raw("role_id"),       
+                            updatedEmployee.role.roleId,// new role 
+                            mysql.raw("manager_id"),    
+                            mysql.raw(updatedEmployee.manager.managerId),  // new manager can also be null...
+                            updateEmployee.updateEmployee[0]    // current employee ID doesn't change
+                        ];
 
-                        
-                        console.log(updateEmployee.updateEmployee[0]);
-                        console.log(updatedEmployee);
-
-                        //UPDATE ? SET ? = ?, ? = ?, ? = ?, ? =? WHERE id = ? ;
-                        
-                        
-                        const uEmployee = sql.sqlUpdateEmployee();                      
-                        const Uarguments = [mysql.raw("employee"),
-                        mysql.raw("first_name"),
-                        updatedEmployee.first_name,
-                        mysql.raw("last_name"),
-                        updatedEmployee.last_name,
-                        mysql.raw("role_id"),
-                        updatedEmployee.role.roleId,
-                        mysql.raw("manager_id"),
-                        updatedEmployee.manager.managerId,
-                        updateEmployee.updateEmployee[0]];
-                        const results = await query(uEmployee,Uarguments,connection);
-                        
+                        try {
+                            
+                            const result = await db.query(sqlUpdateEmployee,arguments,connection);
+                            console.log(`${updateEmployee.updateEmployee} was updated.`);
+                        } catch (error) {
+                            
+                        }                      
                         break;
                          
                     case 'View employees':
-                        const viewEmployee = sql.sqlView("employee");
-                        //SELECT ?,?,?,?,? FROM ? LEFT JOIN ? ON ? = ? LEFT JOIN ? ON ? = ?
-                        const arguments = ["employee.first_name",
-                        "employee.last_name",
-                        "role.title",
-                        "role.salary",
-                        "department.name",
-                        "employee",
-                        "role",
-                        "employee.role_id",
-                        "role.id",
-                        "department",
-                        "role.department_id",
-                        "department.id"];
-                        const rawArguments = arguments.map(mysql.raw);
-                        console.table(await query(viewEmployee,rawArguments,connection));
+                        
+                        try {
+                            console.table(await db.query(sqlViewEmployee,argumentsViewEmployee,connection));
+                        } catch (error){
+                            console.log(`${error}`);
+                        }
+                       
+                        break;
         
                     default:
                         break;
-                   }
+                }
+
+            case 'Exit':
                 break;
-                
-            default:
-                console.log("Thank you, bye!");
-                break;
-          }
-          
+        }
+        
         // exit from loop
-        if (todo === 'Exit') {
+        if (menu.todo === 'Exit') {
             break;
         }         
     }
-
-    // once we finished with the databse quit the connection
-    connection.end();
-
+  
+    // disconnect from database
+    try {
+        connection.end();
+        console.log(`Session disconnected.`);
+    } catch (error) {
+        console.log(`Error in disconnecting : ${error}`);
+    } 
 }
 
 // ===========================================================================

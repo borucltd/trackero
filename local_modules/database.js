@@ -1,12 +1,11 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql');
 
-// database constructor
-
 class database {
 
   constructor() {
 
+    // question to establish database connection
     this.questions = [
       {
         name: 'databaseUrl',
@@ -23,15 +22,14 @@ class database {
       },
       {
           name: 'databasePort',
-          type: 'number',
+          type: 'input',
           default: '3306',
           message: 'Enter your DB port:',
           validate: function( value ) {
-            if (value.length) {
+            if (value.match(/[0-9]/gi)) { 
               return true;
-            } else {
-              return 'Enter your DB port:';
-            }
+          }  
+              return 'Enter your DB port:';         
           }
         },
       {
@@ -75,6 +73,7 @@ class database {
         }
     ];
 
+    // questions to manage 1st level menu
     this.toDoQuestions = [
       {
         name: 'todo',
@@ -88,6 +87,7 @@ class database {
       }
     ];
 
+    // questions to manage department
     this.manageDepartment = [
       {
         name: 'manageD',
@@ -101,6 +101,7 @@ class database {
       }
     ];
 
+    // questions to manage role
     this.manageRole = [
       {
         name: 'manageR',
@@ -114,6 +115,7 @@ class database {
       }
     ];
 
+     // questions to manage employee
     this.manageEmployee = [
       {
         name: 'manageE',
@@ -128,6 +130,7 @@ class database {
       }
     ];
 
+    // questions to add new department
     this.addDepartment = [
       {
         name: 'nameD',
@@ -145,6 +148,7 @@ class database {
       
     ];
 
+    // questions to add new role
     this.addRole = [
       {
         name: 'nameR',
@@ -174,6 +178,7 @@ class database {
           }     
     ];
 
+    // questions to add new employee
     this.addEmployee = [
       {
         name: 'nameE',
@@ -201,12 +206,10 @@ class database {
               }
             }
           }     
-    ];
-
-    
-
+    ];  
   }
 
+  // method to set up DB connection
   setupConnection(answers) {
       return mysql.createConnection({
         host: answers.databaseUrl,
@@ -216,7 +219,30 @@ class database {
         database: answers.databaseName    
       })
   }
-     
+
+  // ===========================================================================
+  // FUNCTIONS taken from GS
+  // ===========================================================================
+  // Wrap connection.connect() in a promise!
+  connect(connection) {
+    return new Promise((resolve, reject) => {
+        connection.connect(err => {
+            if (err) reject(err); // oh no!
+            else resolve(); // oh yeah!            
+        })
+    })
   }
+
+  // Wrap connection.query() in a promise!
+  query(command, values, conn) {
+    return new Promise((resolve, reject) => {
+        //console.log(command + "=" + values );
+        conn.query(command, values, (error, results) => {
+            if (error) reject(error); // nay!
+            else resolve(results); // yay!
+        })
+    })
+  }
+}
 
 module.exports = database;
