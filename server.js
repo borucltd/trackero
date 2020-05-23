@@ -225,7 +225,7 @@ async function main() {
                     "department.id"
                 ];
                 const viewArgumentsE = viewRawArgumentsE.map(mysql.raw);
-             
+                const sqlViewEmployeeToRemove = sql.sqlView("generic");
 
                 switch (submenu.manageE) {
 
@@ -286,24 +286,25 @@ async function main() {
 
                     case 'Remove employee':
 
-                        // collect role ids and respective departments' names
-                        const sqlQuery = sql.sqlView("genericemployee");
-                        const listOfEmployeesRaw = await query(sqlQuery,"",connection);
+                        // collect employees who we would like to delete
+                        const listOfEmployeesRaw = await db.query(sqlViewEmployeeToRemove,tableE,connection);
                         const listOfEmployees = [];
                         for (item of listOfEmployeesRaw) {
                             listOfEmployees.push(item.id + " " +  item.first_name + " " +  item.last_name);
                         }
+
                         const deleteEmployee = await inquirer.prompt({
                             name: 'employeeName',
                             type: 'list',
                             message: 'Select employee to be removed:',
                             choices: listOfEmployees
                         });
+
                         // separate role ID
                         const deleteEmployeeID = deleteEmployee.employeeName.split(/\s/g)[0];
-                        const deleteSql = sql.sqlDelete(); 
+                        const sqlDelete = sql.sqlDelete(); 
                         try {
-                            await query(deleteSql,[mysql.raw("employee"),deleteEmployeeID],connection);
+                            await db.query(sqlDelete,[tableE,deleteEmployeeID],connection);
                             console.log(`${deleteEmployee.employeeName} was deleted.`);
 
                         } catch (error) {
@@ -427,7 +428,7 @@ async function main() {
                 }
 
             case 'Exit':
-                console.log("Thank you, bye!");
+                console.log("Continue managing you database.");
                 break;
         }
 
